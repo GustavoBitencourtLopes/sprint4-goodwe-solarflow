@@ -55,6 +55,16 @@ Todos ficam no arquivo `config.py` e podem ser ajustados.
 | Limite de importação da rede (horário de ponta) | 3 kW |
 | Horário de ponta | 18h às 21h |
 | Escala de tempo | 1 s real = 5 min simulados |
+| Horário inicial do relógio simulado | 16h |
+
+**Relógio simulado e irradiância:** o relógio simulado controla apenas as regras de tarifa (horário de ponta). A irradiância vem do sensor LDR, ajustado manualmente no Wokwi, de forma independente do relógio. Isso permite reproduzir qualquer cenário de teste (sol forte, nublado, sem sol) no momento desejado da demonstração.
+
+**Modos de operação (botão Modo):**
+
+| Modo | Fontes permitidas para a recarga |
+|---|---|
+| Normal | Solar + bateria + rede (com limite reduzido no horário de ponta) |
+| Eco | Somente solar + bateria; sem energia renovável suficiente, a recarga reduz ou pausa |
 
 Atualização do SOC a cada ciclo:
 
@@ -66,7 +76,8 @@ Atualização do SOC a cada ciclo:
 
 | Componente (Wokwi) | Pino | Periférico do RP2040 | Função |
 |---|---|---|---|
-| OLED SSD1306 128×64 | GP0 (SDA), GP1 (SCL) | I2C0 | Painel local de status |
+| Serial Monitor (Wokwi) | GP0 (TX), GP1 (RX) | UART0 | Telemetria CSV e console |
+| OLED SSD1306 128×64 | GP8 (SDA), GP9 (SCL) | I2C0 | Painel local de status |
 | LED verde — ponto A | GP2 | GPIO saída | Ponto A carregando |
 | LED verde — ponto B | GP3 | GPIO saída | Ponto B carregando |
 | LED amarelo | GP4 | GPIO saída | Energia vinda do sol |
@@ -87,9 +98,10 @@ Todos os LEDs usam resistor de 220 Ω. Sensores analógicos alimentados em 3V3.
 
 ### Decisões de arquitetura
 
-- **Limite de canais ADC:** o RP2040 tem apenas 3 entradas analógicas disponíveis para o usuário (GP26, GP27, GP28). Por isso, os sensores analógicos ficam para as grandezas físicas que vêm "de fora" (sol e SOC na conexão), e o SOC durante a recarga e o SOC da bateria estacionária são calculados em software.
+- **Limite de canais ADC:** o RP2040 tem 4 canais ADC externos (GP26 a GP29) e um sensor de temperatura interno, mas na placa Pico W o GP29 é usado internamente para medir a tensão de alimentação. Sobram 3 entradas analógicas (GP26, GP27, GP28). Por isso, os sensores analógicos ficam para as grandezas que vêm "de fora" (sol e SOC na conexão), e o SOC durante a recarga e o SOC da bateria estacionária são calculados em software.
 - **ADC de 12 bits:** o MicroPython entrega a leitura em 16 bits (`read_u16`, 0 a 65535), que é convertida para porcentagem e para kW.
-- **I2C para o display:** usa só 2 fios para um display completo, economizando pinos.
+- **UART0 reservada:** no Wokwi, o Serial Monitor usa GP0 e GP1. Esses pinos ficam livres para a telemetria, que é a fonte dos resultados e gráficos.
+- **I2C para o display:** usa só 2 fios (GP8 e GP9, também ligados ao I2C0) para um display completo, economizando pinos.
 - **PWM para o buzzer:** permite gerar tons diferentes para cada tipo de alerta.
 - **Pull-up interno nos botões:** dispensa resistores externos; o botão fecha o contato com o GND.
 - **Relés como contatores:** isolam o circuito de controle (3,3 V) do circuito de potência, como em um carregador real.
@@ -109,10 +121,10 @@ flowchart LR
         EMS["Gestor de energia<br/>prioridade das fontes"]
         ALG["Divisão proporcional<br/>prioridade menor bateria"]
         FSM["Máquina de estados<br/>por ponto de recarga"]
-        LOG["Telemetria serial<br/>CSV"]
+        LOG["Telemetria serial<br/>CSV · UART0 GP0/GP1"]
     end
     subgraph OUT["Saídas — atuadores"]
-        OLED["OLED SSD1306 · I2C0"]
+        OLED["OLED SSD1306 · I2C0<br/>GP8/GP9"]
         REL["Relés A e B · GP17/GP18"]
         LEDS["LEDs · GP2 a GP6"]
         BUZ["Buzzer · GP16 PWM"]
@@ -187,6 +199,7 @@ stateDiagram-v2
     Carregando --> Disponivel: botão do ponto (desconecta)
     Aguardando --> Disponivel: botão do ponto (desconecta)
     Completo --> Disponivel: botão do ponto (desconecta)
+    Disponivel --> Emergencia: botão de emergência
     Conectado --> Emergencia: botão de emergência
     Carregando --> Emergencia: botão de emergência
     Aguardando --> Emergencia: botão de emergência
@@ -194,7 +207,7 @@ stateDiagram-v2
     Emergencia --> Disponivel: botão de emergência (reset)
 ```
 
-A emergência é global: desliga os dois pontos ao mesmo tempo. Depois do reset, os veículos precisam ser reconectados.
+A emergência é global: desliga os dois pontos ao mesmo tempo e bloqueia novas conexões até o reset. Depois do reset, os veículos precisam ser reconectados.
 
 ## 10. Algoritmo de divisão proporcional com prioridade pela menor bateria
 
