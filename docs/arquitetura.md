@@ -10,6 +10,8 @@ A estação possui **dois pontos de recarga** alimentados por três fontes, nest
 2. **Bateria estacionária** (armazena o excedente solar)
 3. **Rede elétrica** (complemento, com restrição no horário de ponta)
 
+Quando os veículos e a bateria não conseguem absorver toda a geração solar, o excedente é **injetado na rede**, gerando créditos de energia.
+
 Um microcontrolador lê os sensores, decide de onde vem a energia, divide a potência entre os veículos com prioridade para quem tem menos bateria, aciona os contatores (relés) e envia telemetria para análise.
 
 ## 2. Camadas do sistema
@@ -19,7 +21,7 @@ Um microcontrolador lê os sensores, decide de onde vem a energia, divide a pot�
 | Geração | Produzir energia renovável | Sensor LDR mede a irradiância solar |
 | Armazenamento | Guardar excedente e suprir déficit | Bateria modelada em software (SOC, carga e descarga) |
 | Recarga | Entregar energia aos veículos | 2 pontos de recarga com relés (contatores) |
-| Rede | Complementar quando falta energia | Limite contratado + regra de horário de ponta |
+| Rede | Complementar quando falta energia e receber o excedente | Limite contratado + regra de horário de ponta + injeção do excedente |
 | Controle | Decidir e automatizar | Firmware MicroPython no RP2040 |
 | Interface local | Informar o usuário | Display OLED, LEDs e buzzer |
 | Monitoramento | Registrar e analisar dados | Telemetria serial (CSV) + scripts Python de gráficos |
@@ -31,6 +33,7 @@ Um microcontrolador lê os sensores, decide de onde vem a energia, divide a pot�
 | Geração solar | LDR (irradiância) | Painéis FV + inversor híbrido GoodWe | O inversor híbrido integra FV, bateria e rede em um único equipamento |
 | Armazenamento | Modelo de bateria em software | Bateria GoodWe Lynx Home | Guarda o excedente do dia para recarga quando não há sol |
 | Pontos de recarga | Relés + lógica de alocação | Carregador GoodWe EV linha HCA (7 kW) | Suporta recarga por excedente solar e gerenciamento de carga |
+| Medição de excedente | Calculada em software (geração − consumo) | Medidor inteligente GoodWe | Mede importação e exportação na entrada da rede; base da recarga por excedente |
 | Gestão de energia | Algoritmo no RP2040 | Gerenciamento de carga do sistema GoodWe | Mesma lógica: priorizar solar e respeitar limites de potência |
 | Parada de emergência | Botão de emergência | Parada de emergência do carregador HCA | Segurança: corta a recarga imediatamente |
 | Monitoramento | Display + telemetria CSV + gráficos | SEMS Portal e app GoodWe | Acompanhamento dos processos de recarga e dos fluxos de energia |
@@ -127,13 +130,17 @@ flowchart LR
 
 ## 7. Fluxo de energia (sistema real equivalente)
 
+Os carregadores HCA são AC e ficam ligados ao quadro elétrico, em paralelo com a rede. O inversor híbrido converte a energia dos painéis e da bateria para AC e entrega no mesmo quadro. O medidor inteligente, na entrada da rede, mede importação e exportação: é essa medição que permite saber quanto excedente solar existe para a recarga.
+
 ```mermaid
 flowchart LR
     FV["Painéis FV<br/>10 kWp"] --> INV["Inversor híbrido<br/>GoodWe"]
     BAT["Bateria GoodWe Lynx<br/>10 kWh"] <--> INV
-    REDE["Rede elétrica<br/>limite 10 kW"] --> INV
-    INV --> CA["Carregador GoodWe HCA A<br/>7 kW"] --> VA["Veículo A"]
-    INV --> CB["Carregador GoodWe HCA B<br/>7 kW"] --> VB["Veículo B"]
+    INV --> QD["Quadro elétrico<br/>barramento AC"]
+    REDE["Rede elétrica"] <--> MED["Medidor inteligente<br/>GoodWe"] <--> QD
+    QD --> CA["Carregador GoodWe HCA A<br/>7 kW"] --> VA["Veículo A"]
+    QD --> CB["Carregador GoodWe HCA B<br/>7 kW"] --> VB["Veículo B"]
+    MED -. importação e exportação .-> INV
     SEMS["Monitoramento<br/>papel do SEMS Portal"] -.-> INV
 ```
 
@@ -147,7 +154,7 @@ flowchart TD
     B -- Sim --> Z["Desliga relés<br/>alerta sonoro"] --> A
     B -- Não --> C["Lê sensores e calcula<br/>demanda dos veículos"]
     C --> D{"Solar cobre a demanda?"}
-    D -- Sim --> X["Excedente carrega a bateria"] --> I
+    D -- Sim --> X["Excedente carrega a bateria<br/>bateria cheia → injeta na rede"] --> I
     D -- Não --> F{"Bateria acima de 20%?"}
     F -- Sim --> G["Soma potência da bateria"] --> H
     F -- Não --> H{"Modo Eco ativo?"}
@@ -171,17 +178,23 @@ stateDiagram-v2
 
     [*] --> Disponivel
     Disponivel --> Conectado: botão do ponto (lê SOC)
+    Conectado --> Completo: SOC já ≥ alvo
     Conectado --> Carregando: potência alocada > 0
     Conectado --> Aguardando: sem energia disponível
     Aguardando --> Carregando: energia disponível
     Carregando --> Aguardando: energia insuficiente
     Carregando --> Completo: SOC ≥ alvo
     Carregando --> Disponivel: botão do ponto (desconecta)
+    Aguardando --> Disponivel: botão do ponto (desconecta)
     Completo --> Disponivel: botão do ponto (desconecta)
+    Conectado --> Emergencia: botão de emergência
     Carregando --> Emergencia: botão de emergência
     Aguardando --> Emergencia: botão de emergência
+    Completo --> Emergencia: botão de emergência
     Emergencia --> Disponivel: botão de emergência (reset)
 ```
+
+A emergência é global: desliga os dois pontos ao mesmo tempo. Depois do reset, os veículos precisam ser reconectados.
 
 ## 10. Algoritmo de divisão proporcional com prioridade pela menor bateria
 
