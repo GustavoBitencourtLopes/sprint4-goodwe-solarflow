@@ -1,6 +1,6 @@
 # ⚡ SolarFlow — Estação Inteligente de Recarga com Energia Solar
 
-**Sprint 4 · Solução Final Integrada e Inovadora · Arquitetura de Computadores · FIAP × GoodWe**
+**Sprint 4 · Solução Final Integrada e Inovadora · Soluções em Energias Renováveis e Sustentáveis · FIAP × GoodWe**
 
 Estação de recarga de veículos elétricos com geração solar, bateria estacionária e gestão automática de energia, inspirada no ecossistema GoodWe e simulada no Wokwi com Raspberry Pi Pico W (RP2040) e MicroPython.
 
@@ -28,7 +28,7 @@ Estação de recarga de veículos elétricos com geração solar, bateria estaci
 1. [Visão geral](#1-visão-geral)
 2. [Arquitetura final e integração dos sistemas](#2-arquitetura-final-e-integração-dos-sistemas)
 3. [Alinhamento ao desafio GoodWe](#3-alinhamento-ao-desafio-goodwe)
-4. [Alinhamento à disciplina de Arquitetura de Computadores](#4-alinhamento-à-disciplina-de-arquitetura-de-computadores)
+4. [Alinhamento à disciplina Soluções em Energias Renováveis e Sustentáveis](#4-alinhamento-à-disciplina-soluções-em-energias-renováveis-e-sustentáveis)
 5. [Resultados quantitativos e qualitativos](#5-resultados-quantitativos-e-qualitativos)
 6. [Avaliação crítica: sustentabilidade e inovação](#6-avaliação-crítica-sustentabilidade-e-inovação)
 7. [Como executar](#7-como-executar)
@@ -215,25 +215,37 @@ Os carregadores da série HCA trazem, de fábrica, as funções que o SolarFlow 
 
 ---
 
-## 4. Alinhamento à disciplina de Arquitetura de Computadores
+## 4. Alinhamento à disciplina Soluções em Energias Renováveis e Sustentáveis
 
-O projeto foi construído sobre conceitos da disciplina, e várias decisões de design só fazem sentido à luz deles:
+### 4.1 Conceitos de energia renovável e sustentabilidade aplicados
 
-| Conceito | Onde aparece no SolarFlow | Decisão tomada |
+O SolarFlow coloca em prática, em um sistema funcionando, os principais conteúdos da disciplina:
+
+| Conceito da disciplina | Como aparece no SolarFlow | Evidência nos resultados |
 |---|---|---|
-| **Microcontrolador × microprocessador** | RP2040: dois núcleos ARM Cortex-M0+ (até 133 MHz) e 264 KB de SRAM em um único chip, com periféricos integrados | Um microcontrolador é suficiente e mais adequado para controle em tempo real de baixo consumo |
-| **Conversão analógico-digital** | ADC de 12 bits: 4.096 níveis, resolução de cerca de 0,8 mV em 3,3 V; o MicroPython entrega a leitura escalada para 16 bits (`read_u16`) | Conversão em cadeia: leitura → tensão → resistência do LDR (divisor de tensão) → lux → irradiância → kW |
-| **Recursos limitados de hardware** | A placa Pico W expõe apenas 3 entradas ADC (GP26 a GP28); o GP29 mede a alimentação | Os 3 canais ficam para grandezas externas; o SOC durante a recarga é calculado em software |
-| **Filtragem de sinal** | Média de 4 amostras por leitura analógica | Reduz ruído do ADC com custo computacional mínimo |
-| **GPIO e resistores de pull-up** | Botões com pull-up interno, ativos em nível baixo | Dispensa resistores externos |
-| **Interrupções** | Interrupção de timer a cada 10 ms lê os quatro botões; um clique só vale após 3 leituras estáveis (30 ms) | Elimina repiques ao apertar e ao soltar; a rotina de interrupção é curta e não aloca memória, como exige uma ISR |
-| **Barramento I2C** | Display SSD1306 em 2 fios a 400 kHz; o quadro de 128×64 pixels ocupa 1.024 bytes de RAM (framebuffer) | Enviar 1.024 bytes leva cerca de 23 ms (9 bits por byte a 400 kHz); por isso o display é redesenhado a cada 500 ms, e não a cada iteração |
-| **PWM** | Buzzer com frequência variável | Cada evento tem um som próprio |
-| **Execução não bloqueante** | Laço principal de 20 ms; buzzer com fila de notas; ciclo de simulação a cada 500 ms | Nenhuma tarefa trava as outras (escalonamento cooperativo) |
-| **Representação numérica** | O Cortex-M0+ não tem unidade de ponto flutuante (FPU); operações com `float` são emuladas em software e sujeitas a arredondamento | Um erro real de arredondamento (SOC parando em 79,99999%) foi corrigido com tolerância de 1 Wh |
-| **Comunicação serial** | Telemetria pela USB (classe CDC, serial virtual), sem ocupar pinos de GPIO | Separa o canal de dados do hardware de campo |
-| **Isolamento de potência** | Relés separam o circuito de controle (3,3 V) do circuito de potência (alimentação em 5 V pelo VBUS) | Mesmo princípio de um contator em um carregador real |
-| **Modularização e integração hardware/software** | 11 módulos com responsabilidades separadas; os mesmos módulos rodam no Pico e no PC (bancada de testes) | Facilita testes, manutenção e evolução |
+| **Geração solar fotovoltaica e irradiância** | A geração é proporcional à irradiância (1.000 W/m² = 10 kWp); o perfil diário acompanha o nascer e o pôr do sol, com queda durante a passagem de nuvens | 56,09 kWh gerados no dia, o equivalente a 5,6 horas de sol pleno (HSP) |
+| **Sistema híbrido (on-grid com armazenamento)** | O inversor híbrido integra painéis, bateria e rede, e a estação funciona com sol, sem sol e no horário de ponta | Prioridade solar → bateria → rede ao longo do dia (seção 5.1) |
+| **Armazenamento e gestão de baterias** | Controle do estado de carga (SOC); profundidade de descarga limitada a 80% (SOC mínimo de 20%) e potência de 5 kW para 10 kWh (0,5C), que preservam a vida útil | 16,00 kWh entregues pela bateria, sem nunca descer de 20% |
+| **Autoconsumo e autossuficiência** | A energia gerada é consumida no próprio local sempre que possível, diretamente ou pela bateria | Autoconsumo de 78,0% da geração; 58,8% da recarga atendida por energia renovável local |
+| **Geração distribuída e compensação de energia** | O excedente que não cabe nos veículos nem na bateria é injetado na rede, gerando créditos pelo Sistema de Compensação de Energia Elétrica (Lei 14.300/2022) | 12,32 kWh injetados (não monetizados nos cálculos, estimativa conservadora) |
+| **Gestão pelo lado da demanda e *peak shaving*** | Limite de potência da rede no horário de ponta e reserva da bateria para esse período | Pico na ponta de 14 kW para 3 kW (79% menor) |
+| **Tarifação horária** | Horário de ponta real da Enel SP e comparação entre tarifa convencional e tarifa branca | A tarifa branca não compensou neste perfil de uso (seção 6.2) |
+| **Eficiência energética e indicadores** | Telemetria contínua e balanço de energia de cada fonte | Balanço fechado com diferença zero (seção 5.5) |
+| **Pegada de carbono e matriz elétrica** | Emissões calculadas com o fator médio do Sistema Interligado Nacional (MCTI) | 1,84 kg de CO₂ evitados por dia, com leitura crítica da matriz brasileira (seção 6.2) |
+| **Mobilidade elétrica e redes inteligentes** | Carregadores que reagem à geração, ao armazenamento e à medição da rede em tempo real | Integração carregador HCA + medidor + monitoramento (seção 3.1) |
+| **Desenvolvimento sustentável** | Contribuição para os ODS 7, 9, 11 e 13 | Seção 6.6 |
+
+### 4.2 Competências do curso de Ciência da Computação aplicadas
+
+| Competência | Aplicação no SolarFlow |
+|---|---|
+| **Sistemas embarcados** | Firmware em MicroPython no Raspberry Pi Pico W (RP2040), organizado em 11 módulos |
+| **Sensores e conversão analógico-digital** | O ADC de 12 bits converte a leitura do LDR em tensão, resistência, lux, irradiância e, por fim, kW; média de 4 amostras contra ruído |
+| **Tempo real e interrupções** | Botões lidos por interrupção de timer a cada 10 ms, com debounce; laço principal não bloqueante |
+| **Comunicação entre dispositivos** | Display OLED por I2C, buzzer por PWM, relés por GPIO e telemetria pela serial USB |
+| **Algoritmos** | Gestor de energia por prioridade de fontes e divisão proporcional com redistribuição da sobra |
+| **Análise e visualização de dados** | Python, pandas e matplotlib transformam a telemetria em gráficos e indicadores |
+| **Testes e validação** | Bancada de testes que executa os mesmos módulos do firmware para comparar estratégias |
 
 ---
 
@@ -348,6 +360,7 @@ A bancada (`analise/bancada.py`) executa os **mesmos módulos do firmware** no c
 - O modelo não inclui perdas de conversão, eficiência de ida e volta da bateria nem sua degradação.
 - As tarifas são valores de referência sem impostos e sem bandeiras tarifárias, e a energia injetada na rede não foi monetizada (estimativa conservadora).
 - Os resultados vêm de um cenário de um dia útil; a projeção anual supõe dias semelhantes.
+- O impacto ambiental do ciclo de vida dos equipamentos, como a extração de matérias-primas e a reciclagem das baterias, não foi avaliado e deve entrar em uma análise completa de sustentabilidade.
 
 ### 6.4 Diferenciais inovadores
 
@@ -452,6 +465,7 @@ python bancada.py      # testes das estratégias (gera bancada.md)
 - GoodWe, carregador EV GW7K-HCA, ficha do produto (distribuidor Krannich Solar): https://shop.krannich-solar.com/de-en/e-mobility/charging-stations/42618/ev-charger-gw-7k-hca
 - Canal Solar, *Tarifa branca: conceitos e especificações na medição de energia* (postos tarifários e tarifas de referência da Enel SP): https://canalsolar.com.br/tarifa-branca-conceitos-e-especificacoes-na-medicao-de-energia-eletrica
 - Idec, *Tarifa branca* (horário de ponta em São Paulo): https://idec.org.br/node/26342
+- Brasil, Lei nº 14.300/2022 (marco legal da micro e minigeração distribuída e Sistema de Compensação de Energia Elétrica): https://www.planalto.gov.br/ccivil_03/_ato2019-2022/2022/lei/l14300.htm
 - O Setor Elétrico, *Geração de energia elétrica tem a menor emissão de CO₂ dos últimos onze anos* (fator de emissão do SIN 2023, dados do MCTI): https://www.osetoreletrico.com.br/?p=159478
 - Cenário Energia, *Brasil reduz intensidade de carbono na geração elétrica* (fatores de 2025 e participação renovável de 2024, dados do MCTI e da EPE): https://cenarioenergia.com.br/2025/06/13/brasil-reduz-intensidade-de-carbono-na-geracao-eletrica-com-inclusao-de-novas-renovaveis-na-base-de-calculo-oficial/
 - Raspberry Pi, *RP2040 Datasheet*: https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf
