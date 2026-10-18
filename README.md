@@ -125,7 +125,7 @@ flowchart LR
 
 ### 2.4 Circuito no Wokwi e estação em funcionamento
 
-![Circuito e estação em funcionamento no Wokwi: display, LEDs, relés e Serial Monitor com os eventos do dia](docs/imagens/circuito_wokwi.png)
+![Circuito e estação em funcionamento no Wokwi: display, LEDs, relés e Serial Monitor com os eventos do dia](docs/circuito_wokwi.png)
 
 *Estação ao fim do cenário automático: o Serial Monitor mostra os eventos do dia (injeção do excedente, bateria cheia, horário de ponta, proteção da bateria) e o teste do botão de emergência, com os relés abertos e o LED vermelho piscando.*
 
@@ -415,7 +415,7 @@ python bancada.py      # testes das estratégias (gera bancada.md)
 ├── README.md
 ├── docs/
 │   ├── arquitetura.md          # arquitetura detalhada, diagramas e decisões
-│   └── imagens/                # print do circuito e da simulação
+│   └── circuito_wokwi.png      # print do circuito e da simulação
 ├── firmware/                   # código MicroPython do Raspberry Pi Pico W
 │   ├── main.py, config.py, sensores.py, relogio.py, ponto_recarga.py
 │   ├── energia.py, algoritmo.py, atuadores.py, display.py
