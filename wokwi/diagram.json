@@ -1,0 +1,475 @@
+{
+  "version": 1,
+  "author": "SolarFlow - Sprint 4 GoodWe",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-pi-pico-w",
+      "id": "pico",
+      "top": 0,
+      "left": 0,
+      "attrs": {
+        "env": "micropython-20260406-v1.28.0"
+      }
+    },
+    {
+      "type": "board-ssd1306",
+      "id": "oled",
+      "top": -140,
+      "left": -300,
+      "attrs": {
+        "i2cAddress": "0x3c"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_a",
+      "top": 40,
+      "left": -180,
+      "attrs": {
+        "value": "220"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_b",
+      "top": 70,
+      "left": -180,
+      "attrs": {
+        "value": "220"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_sol",
+      "top": 100,
+      "left": -180,
+      "attrs": {
+        "value": "220"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_bat",
+      "top": 130,
+      "left": -180,
+      "attrs": {
+        "value": "220"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_rede",
+      "top": 160,
+      "left": -180,
+      "attrs": {
+        "value": "220"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_a",
+      "top": 20,
+      "left": -280,
+      "attrs": {
+        "color": "green",
+        "label": "A"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_b",
+      "top": 50,
+      "left": -320,
+      "attrs": {
+        "color": "green",
+        "label": "B"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_sol",
+      "top": 80,
+      "left": -360,
+      "attrs": {
+        "color": "yellow",
+        "label": "SOL"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_bat",
+      "top": 110,
+      "left": -400,
+      "attrs": {
+        "color": "blue",
+        "label": "BAT"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_rede",
+      "top": 140,
+      "left": -440,
+      "attrs": {
+        "color": "red",
+        "label": "REDE"
+      }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn_emerg",
+      "top": 230,
+      "left": -420,
+      "attrs": {
+        "color": "red",
+        "label": "EMERGENCIA"
+      }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn_modo",
+      "top": 230,
+      "left": -320,
+      "attrs": {
+        "color": "blue",
+        "label": "MODO"
+      }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn_a",
+      "top": 230,
+      "left": -220,
+      "attrs": {
+        "color": "green",
+        "label": "PONTO A"
+      }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn_b",
+      "top": 230,
+      "left": -120,
+      "attrs": {
+        "color": "green",
+        "label": "PONTO B"
+      }
+    },
+    {
+      "type": "wokwi-photoresistor-sensor",
+      "id": "ldr",
+      "top": -170,
+      "left": 160,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "pot_a",
+      "top": -90,
+      "left": 180,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "pot_b",
+      "top": -10,
+      "left": 180,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-buzzer",
+      "id": "buzzer",
+      "top": 230,
+      "left": 180,
+      "attrs": {
+        "volume": "0.1"
+      }
+    },
+    {
+      "type": "wokwi-relay-module",
+      "id": "rele_a",
+      "top": 100,
+      "left": 180,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-relay-module",
+      "id": "rele_b",
+      "top": 160,
+      "left": 180,
+      "attrs": {}
+    }
+  ],
+  "connections": [
+    [
+      "oled:SDA",
+      "pico:GP8",
+      "blue",
+      []
+    ],
+    [
+      "oled:SCL",
+      "pico:GP9",
+      "violet",
+      []
+    ],
+    [
+      "oled:VCC",
+      "pico:3V3",
+      "red",
+      []
+    ],
+    [
+      "oled:GND",
+      "pico:GND.3",
+      "black",
+      []
+    ],
+    [
+      "pico:GP2",
+      "r_a:2",
+      "green",
+      []
+    ],
+    [
+      "r_a:1",
+      "led_a:A",
+      "green",
+      []
+    ],
+    [
+      "led_a:C",
+      "pico:GND.1",
+      "black",
+      []
+    ],
+    [
+      "pico:GP3",
+      "r_b:2",
+      "green",
+      []
+    ],
+    [
+      "r_b:1",
+      "led_b:A",
+      "green",
+      []
+    ],
+    [
+      "led_b:C",
+      "pico:GND.1",
+      "black",
+      []
+    ],
+    [
+      "pico:GP4",
+      "r_sol:2",
+      "gold",
+      []
+    ],
+    [
+      "r_sol:1",
+      "led_sol:A",
+      "gold",
+      []
+    ],
+    [
+      "led_sol:C",
+      "pico:GND.2",
+      "black",
+      []
+    ],
+    [
+      "pico:GP5",
+      "r_bat:2",
+      "blue",
+      []
+    ],
+    [
+      "r_bat:1",
+      "led_bat:A",
+      "blue",
+      []
+    ],
+    [
+      "led_bat:C",
+      "pico:GND.2",
+      "black",
+      []
+    ],
+    [
+      "pico:GP6",
+      "r_rede:2",
+      "red",
+      []
+    ],
+    [
+      "r_rede:1",
+      "led_rede:A",
+      "red",
+      []
+    ],
+    [
+      "led_rede:C",
+      "pico:GND.2",
+      "black",
+      []
+    ],
+    [
+      "btn_emerg:1.l",
+      "pico:GP12",
+      "red",
+      []
+    ],
+    [
+      "btn_emerg:2.l",
+      "pico:GND.4",
+      "black",
+      []
+    ],
+    [
+      "btn_modo:1.l",
+      "pico:GP13",
+      "blue",
+      []
+    ],
+    [
+      "btn_modo:2.l",
+      "pico:GND.4",
+      "black",
+      []
+    ],
+    [
+      "btn_a:1.l",
+      "pico:GP14",
+      "green",
+      []
+    ],
+    [
+      "btn_a:2.l",
+      "pico:GND.5",
+      "black",
+      []
+    ],
+    [
+      "btn_b:1.l",
+      "pico:GP15",
+      "green",
+      []
+    ],
+    [
+      "btn_b:2.l",
+      "pico:GND.5",
+      "black",
+      []
+    ],
+    [
+      "ldr:AO",
+      "pico:GP26",
+      "orange",
+      []
+    ],
+    [
+      "ldr:VCC",
+      "pico:3V3",
+      "red",
+      []
+    ],
+    [
+      "ldr:GND",
+      "pico:GND.8",
+      "black",
+      []
+    ],
+    [
+      "pot_a:SIG",
+      "pico:GP27",
+      "orange",
+      []
+    ],
+    [
+      "pot_a:VCC",
+      "pico:3V3",
+      "red",
+      []
+    ],
+    [
+      "pot_a:GND",
+      "pico:GND.8",
+      "black",
+      []
+    ],
+    [
+      "pot_b:SIG",
+      "pico:GP28",
+      "orange",
+      []
+    ],
+    [
+      "pot_b:VCC",
+      "pico:3V3",
+      "red",
+      []
+    ],
+    [
+      "pot_b:GND",
+      "pico:GND.8",
+      "black",
+      []
+    ],
+    [
+      "buzzer:2",
+      "pico:GP16",
+      "purple",
+      []
+    ],
+    [
+      "buzzer:1",
+      "pico:GND.6",
+      "black",
+      []
+    ],
+    [
+      "rele_a:IN",
+      "pico:GP17",
+      "cyan",
+      []
+    ],
+    [
+      "rele_a:VCC",
+      "pico:VBUS",
+      "red",
+      []
+    ],
+    [
+      "rele_a:GND",
+      "pico:GND.7",
+      "black",
+      []
+    ],
+    [
+      "rele_b:IN",
+      "pico:GP18",
+      "cyan",
+      []
+    ],
+    [
+      "rele_b:VCC",
+      "pico:VBUS",
+      "red",
+      []
+    ],
+    [
+      "rele_b:GND",
+      "pico:GND.7",
+      "black",
+      []
+    ]
+  ],
+  "dependencies": {},
+  "serialMonitor": {
+    "display": "always",
+    "newline": "lf"
+  }
+}
