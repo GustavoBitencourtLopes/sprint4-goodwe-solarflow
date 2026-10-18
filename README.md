@@ -7,7 +7,7 @@ Estação de recarga de veículos elétricos com geração solar, bateria estaci
 | | |
 |---|---|
 | 🔌 **Simulação no Wokwi** | https://wokwi.com/projects/478074161748924417 |
-| 🎥 **Vídeo de demonstração** | *(link do YouTube, adicionado após a gravação)* |
+| 🎥 **Vídeo de demonstração** | https://youtu.be/kEOGPnEqxEY |
 | 📐 **Arquitetura detalhada** | [docs/arquitetura.md](docs/arquitetura.md) |
 
 ---
@@ -125,9 +125,9 @@ flowchart LR
 
 ### 2.4 Circuito no Wokwi e estação em funcionamento
 
-![Circuito da estação no Wokwi](docs/imagens/circuito_wokwi.png)
+![Circuito e estação em funcionamento no Wokwi: display, LEDs, relés e Serial Monitor com os eventos do dia](docs/imagens/circuito_wokwi.png)
 
-![Estação em funcionamento no Wokwi (display, LEDs e Serial Monitor)](docs/imagens/simulacao_wokwi.png)
+*Estação ao fim do cenário automático: o Serial Monitor mostra os eventos do dia (injeção do excedente, bateria cheia, horário de ponta, proteção da bateria) e o teste do botão de emergência, com os relés abertos e o LED vermelho piscando.*
 
 | Componente | Pino | Periférico do RP2040 | Função |
 |---|---|---|---|
@@ -415,7 +415,7 @@ python bancada.py      # testes das estratégias (gera bancada.md)
 ├── README.md
 ├── docs/
 │   ├── arquitetura.md          # arquitetura detalhada, diagramas e decisões
-│   └── imagens/                # prints do circuito e da simulação
+│   └── imagens/                # print do circuito e da simulação
 ├── firmware/                   # código MicroPython do Raspberry Pi Pico W
 │   ├── main.py, config.py, sensores.py, relogio.py, ponto_recarga.py
 │   ├── energia.py, algoritmo.py, atuadores.py, display.py
